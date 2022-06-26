@@ -5,7 +5,8 @@ use crossterm::{
     event::Event::Key,
     event::KeyCode::{Char, Esc},
     event::{read, KeyEvent},
-    terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType},
+    style::{style, Attribute, PrintStyledContent, ResetColor, Stylize},
+    terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType},
     ExecutableCommand, Result,
 };
 
@@ -21,13 +22,15 @@ fn main() -> Result<()> {
     let mut ui_mode = UiMode::Command;
 
     loop {
-        stdout
-            .execute(Clear(ClearType::All))?
-            .execute(MoveTo(0, 0))?;
+        stdout.execute(Clear(ClearType::All))?;
 
+        let (_, rows) = size().expect("Couldn't communicate with the terminal");
+        stdout.execute(MoveTo(0, rows))?;
         match ui_mode {
             UiMode::Command => {
-                println!("In COMMAND mode");
+                stdout.execute(PrintStyledContent(
+                    style(format!("In COMMAND mode.")).attribute(Attribute::Bold),
+                ))?;
                 match read().unwrap() {
                     Key(KeyEvent {
                         code: Char('q'), ..
@@ -41,7 +44,9 @@ fn main() -> Result<()> {
                 }
             }
             UiMode::Edit => {
-                println!("In EDIT mode");
+                stdout.execute(PrintStyledContent(
+                    style(format!("In EDIT mode.")).attribute(Attribute::Bold),
+                ))?;
                 match read().unwrap() {
                     Key(KeyEvent {
                         code: Char('q'), ..
@@ -56,5 +61,7 @@ fn main() -> Result<()> {
     }
 
     disable_raw_mode()?;
+    stdout.execute(ResetColor)?;
+
     Ok(())
 }
