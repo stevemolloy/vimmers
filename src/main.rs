@@ -3,7 +3,7 @@ use std::io::stdout;
 use crossterm::{
     cursor::MoveTo,
     event::Event::Key,
-    event::KeyCode::{Char, Esc},
+    event::KeyCode::{Char, Enter, Esc},
     event::{read, KeyEvent},
     style::{style, Attribute, PrintStyledContent, ResetColor, Stylize},
     terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType},
@@ -21,11 +21,19 @@ fn main() -> Result<()> {
 
     let mut ui_mode = UiMode::Command;
 
+    let mut text_buffer = String::new();
+
     loop {
         stdout.execute(Clear(ClearType::All))?;
 
         let (_, rows) = size().expect("Couldn't communicate with the terminal");
-        stdout.execute(MoveTo(0, rows))?;
+
+        stdout
+            .execute(MoveTo(0, 0))?
+            .execute(PrintStyledContent(
+                style(&text_buffer).attribute(Attribute::Bold),
+            ))?
+            .execute(MoveTo(0, rows))?;
         match ui_mode {
             UiMode::Command => {
                 stdout.execute(PrintStyledContent(
@@ -48,12 +56,9 @@ fn main() -> Result<()> {
                     style(format!("In EDIT mode.")).attribute(Attribute::Bold),
                 ))?;
                 match read().unwrap() {
-                    Key(KeyEvent {
-                        code: Char('q'), ..
-                    }) => {
-                        break;
-                    }
                     Key(KeyEvent { code: Esc, .. }) => ui_mode = UiMode::Command,
+                    Key(KeyEvent { code: Enter, .. }) => text_buffer.push_str("\n\r"),
+                    Key(KeyEvent { code: Char(a), .. }) => text_buffer.push(a),
                     _ => (),
                 }
             }
