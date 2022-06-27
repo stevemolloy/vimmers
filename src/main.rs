@@ -3,7 +3,7 @@ use std::io::stdout;
 use crossterm::{
     cursor::MoveTo,
     event::Event::Key,
-    event::KeyCode::{Char, Enter, Esc},
+    event::KeyCode::{Char, Enter, Esc, Tab},
     event::{read, KeyEvent},
     style::{style, Attribute, PrintStyledContent, ResetColor, Stylize},
     terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType},
@@ -58,6 +58,7 @@ fn main() -> Result<()> {
                 match read().unwrap() {
                     Key(KeyEvent { code: Esc, .. }) => ui_mode = UiMode::Command,
                     Key(KeyEvent { code: Enter, .. }) => text_buffer.push_str("\n\r"),
+                    Key(KeyEvent { code: Tab, .. }) => text_buffer.push_str("    "),
                     Key(KeyEvent { code: Char(a), .. }) => text_buffer.push(a),
                     _ => (),
                 }
