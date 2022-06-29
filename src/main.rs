@@ -66,6 +66,13 @@ enum UiMode {
     Edit,
 }
 
+fn print_message(message: &str, loc: u16, stream: &mut Stdout) -> Result<()> {
+    stream.execute(MoveTo(0, loc))?.execute(PrintStyledContent(
+        style(format!("{}", message)).attribute(Attribute::Bold),
+    ))?;
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let mut stdout = stdout();
     enable_raw_mode()?;
@@ -82,12 +89,8 @@ fn main() -> Result<()> {
 
         match ui_mode {
             UiMode::Command => {
-                stdout
-                    .execute(MoveTo(0, rows))?
-                    .execute(PrintStyledContent(
-                        style(format!("In COMMAND mode.")).attribute(Attribute::Bold),
-                    ))?
-                    .execute(MoveTo(text_buffer.col as u16, text_buffer.row as u16))?;
+                print_message("In COMMAND mode", rows, &mut stdout)?;
+                stdout.execute(MoveTo(text_buffer.col as u16, text_buffer.row as u16))?;
                 match read().unwrap() {
                     Key(KeyEvent {
                         code: Char('q'), ..
@@ -101,14 +104,13 @@ fn main() -> Result<()> {
                 }
             }
             UiMode::Edit => {
-                stdout
-                    .execute(MoveTo(0, rows))?
-                    .execute(PrintStyledContent(
-                        style(format!("In EDIT mode.")).attribute(Attribute::Bold),
-                    ))?
-                    .execute(MoveTo(text_buffer.col as u16, text_buffer.row as u16))?;
+                print_message("In EDIT mode", rows, &mut stdout)?;
+                stdout.execute(MoveTo(text_buffer.col as u16, text_buffer.row as u16))?;
                 match read().unwrap() {
-                    Key(KeyEvent { code: Esc, .. }) => ui_mode = UiMode::Command,
+                    Key(KeyEvent { code: Esc, .. }) => {
+                        ui_mode = UiMode::Command;
+                        text_buffer.col -= 1;
+                    }
                     Key(KeyEvent { code: Char(a), .. }) => {
                         text_buffer.edit(a);
                     }
