@@ -1,9 +1,10 @@
+use gapbuffer::GapBuffer;
 use std::io::{stdout, Stdout};
 
 use crossterm::{
     cursor::{MoveDown, MoveTo, MoveToColumn},
     event::Event::Key,
-    event::KeyCode::{Char, Enter, Esc},
+    event::KeyCode::{Char, Enter, Esc, Left, Right},
     event::{read, KeyEvent},
     style::{style, Attribute, Print, PrintStyledContent, ResetColor, Stylize},
     terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType},
@@ -12,7 +13,7 @@ use crossterm::{
 
 #[derive(Debug)]
 struct TextBuffer {
-    text: Vec<String>,
+    text: GapBuffer<char>,
     row: usize,
     col: usize,
 }
@@ -20,7 +21,7 @@ struct TextBuffer {
 impl TextBuffer {
     fn new() -> Self {
         Self {
-            text: vec![],
+            text: GapBuffer::new(),
             row: 0,
             col: 0,
         }
@@ -54,7 +55,11 @@ impl TextBuffer {
                 self.col = 0;
             }
             a => {
-                self.text[self.row].push(a);
+                if self.row == 0 {
+                    self.text[self.row].push(a);
+                } else {
+                    self.text[self.row].insert(self.row, a);
+                }
                 self.col += 1;
             }
         }
@@ -110,6 +115,17 @@ fn main() -> Result<()> {
                     Key(KeyEvent { code: Esc, .. }) => {
                         ui_mode = UiMode::Command;
                         text_buffer.col -= 1;
+                    }
+                    Key(KeyEvent { code: Left, .. }) => {
+                        if text_buffer.col > 0 {
+                            text_buffer.col -= 1;
+                        }
+                    }
+                    Key(KeyEvent { code: Right, .. }) => {
+                        let curr_line = &text_buffer.text[text_buffer.row];
+                        if text_buffer.col < curr_line.len() {
+                            text_buffer.col += 1;
+                        }
                     }
                     Key(KeyEvent { code: Char(a), .. }) => {
                         text_buffer.edit(a);

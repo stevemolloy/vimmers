@@ -46,6 +46,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "gapbuffer"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e929b3ff01e4accdce7f5596a044890b5052ab7418ba8ce9ce5865d26ae4417"
+
+[[package]]
 name = "libc"
 version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -161,6 +167,7 @@ name = "vimmers"
 version = "0.1.0"
 dependencies = [
  "crossterm",
+ "gapbuffer",
 ]
 
 [[package]]
